@@ -1,0 +1,5 @@
+output/
+__pycache__/
+*.py[cod]
+input/parametri.json
+.DS_Store
