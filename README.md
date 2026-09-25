@@ -1,25 +1,24 @@
-# funziona — modello a classi
+# CODE-TANDEM — due macchine in tandem con catene di Markov
 
-Versione a classi di `modello_generale_convergenza3.py` (che resta qui intatto come riferimento).
-I calcoli, i commenti e le stampe sono gli stessi dello script originale: l'output di
-`python main.py` e' identico riga per riga a quello di `python modello_generale_convergenza3.py`
-(a parte la prima riga, che dice da quale file sono stati letti i parametri).
-
-Ingresso e uscita sono JSON:
+Modello di due macchine in serie (M1 -> M2) con buffer finiti e blocking, risolto come catena di Markov
+a tempo continuo: si costruisce la matrice dei tassi Q, si passa a P(h) = I + Q*h e si fa convergere la
+distribuzione di probabilita' fino a quella stazionaria, da cui si calcolano gli indicatori di prestazione.
 
 ```
-input/parametri.json     ->  main.py  ->  output/risultati.json  (+ output/report.txt)
+input/parametri.json  ->  main.py          ->  output/risultati_<parametri>.json  (+ report_<parametri>.txt)
+input/parametri.json  ->  sensitivita.py   ->  output/sensitivita/<data_ora>/     (tabella + grafici)
 ```
 
 ## Struttura
 
 ```
 funziona/
-├── modello_generale_convergenza3.py   copia dello script originale (non usato da main.py)
-├── main.py                            punto di ingresso: usa le classi nell'ordine dello script
-├── input/parametri.json               parametri di ingresso letti da main.py
-├── output/                            risultati salvati da main.py (risultati.json, report.txt)
-└── tandem/                            il package con le classi
+├── main.py                 un'esecuzione del modello con i parametri di input/parametri.json
+├── sensitivita.py          analisi di sensitivita' one-at-a-time e grafici
+├── input/parametri.json    scenario base (lam, mu, K1, K2) e bound della sensitivita'
+├── output/                 risultati salvati (non tracciata da git: si ricrea lanciando gli script)
+├── requirements.txt        pacchetti del .venv (pip freeze)
+└── tandem/                 il package con le classi
     ├── input.py        ParametriIngresso             dati di ingresso (lam, mu, K1, K2), anche da JSON
     ├── oggetti.py      Stato, SpazioStati            sezione 1: lista degli stati
     ├── modello.py      ModelloTandem                 sezione 2: Q, tabella con le lettere L, h, P(h)
@@ -31,14 +30,12 @@ funziona/
     └── output.py       StampaConsole, SalvaRisultati stampa a video e salvataggio su file
 ```
 
-Ogni classe fa poche cose: `ModelloTandem` costruisce solo le matrici, `RisolutoreConvergenza`
-fa solo convergere, `StampaConsole` stampa soltanto, `Risultati` contiene soltanto.
-
 ## Uso
 
 ```bash
-source .venv/bin/activate           # il venv del progetto
-pip install -r requirements.txt     # solo la prima volta (serve solo numpy)
+python3 -m venv .venv               # solo la prima volta
+source .venv/bin/activate
+pip install -r requirements.txt     # numpy e matplotlib
 
 python main.py                                   # legge input/parametri.json
 python main.py --K1 1 --K2 1                     # sovrascrive singoli valori del JSON
@@ -57,10 +54,13 @@ Per cambiare i parametri modifica `input/parametri.json`:
 }
 ```
 
-Alla fine di ogni esecuzione (salvo `--no-salva`) in `output/` trovi:
+Alla fine di ogni esecuzione (salvo `--no-salva`) in `output/` trovi due file con i parametri nel nome,
+per esempio con lam=10, mu=12, K1=0, K2=0:
 
-- `risultati.json` — parametri, h, passi, probabilita' stazionarie per stato, indicatori, esiti dei controlli
-- `report.txt` — lo stesso testo stampato a video
+- `risultati_lam10_mu12_K1-0_K2-0.json` — parametri, h, passi, probabilita' stazionarie per stato, indicatori, esiti dei controlli
+- `report_lam10_mu12_K1-0_K2-0.txt` — lo stesso testo stampato a video
+
+Esecuzioni con parametri diversi producono file diversi, quindi nulla viene sovrascritto.
 
 ## Analisi di sensitivita' e grafici
 

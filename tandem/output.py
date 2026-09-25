@@ -119,4 +119,8 @@ class SalvaRisultati:
         return percorso
 
     def tutto(self, modello, risultati):
-        return [self.json(risultati), self.report(modello, risultati)]
+        # un file per combinazione di parametri: rilanciare con parametri diversi non sovrascrive i risultati precedenti
+        p = risultati.parametri
+        suffisso = f"_lam{p.lam:g}_mu{p.mu:g}_K1-{p.K1}_K2-{p.K2}"
+        return [self.json(risultati, "risultati" + suffisso + ".json"),
+                self.report(modello, risultati, "report" + suffisso + ".txt")]

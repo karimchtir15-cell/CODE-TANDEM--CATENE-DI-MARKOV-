@@ -1,6 +1,6 @@
 """
 Package tandem: il modello a catena di Markov di due macchine in tandem,
-riscritto in classi a partire da modello_generale_convergenza3.py.
+organizzato in classi, una per sezione del calcolo.
 
   input.py        ParametriIngresso            (dati di ingresso)
   oggetti.py      Stato, SpazioStati           (sezione 1: lista degli stati)

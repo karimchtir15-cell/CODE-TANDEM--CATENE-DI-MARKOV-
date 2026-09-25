@@ -1,6 +1,6 @@
 """
-Punto di ingresso: fa esattamente quello che faceva modello_generale_convergenza3.py,
-ma usando le classi del package tandem.
+Punto di ingresso: due macchine in tandem risolte con una catena di Markov (metodo della convergenza),
+usando le classi del package tandem.
 
 Uso:
     python main.py                              parametri letti da input/parametri.json
@@ -9,7 +9,7 @@ Uso:
     python main.py --no-salva                   non scrive nulla nella cartella output/
 
 Ingresso:  input/parametri.json     (JSON con lam, mu, K1, K2)
-Uscita:    output/risultati.json    (JSON con tutti i risultati)  +  output/report.txt
+Uscita:    output/risultati_<parametri>.json  (JSON con tutti i risultati)  +  output/report_<parametri>.txt
 """
 import argparse
 from pathlib import Path
