@@ -2,5 +2,25 @@
   "lam": 10.0,
   "mu": 12.0,
   "K1": 0,
-  "K2": 0
+  "K2": 0,
+  "sensitivita": {
+    "lam": {
+      "lower": 4.0,
+      "upper": 20.0,
+      "punti": 9
+    },
+    "mu": {
+      "lower": 6.0,
+      "upper": 24.0,
+      "punti": 9
+    },
+    "K1": {
+      "lower": 0,
+      "upper": 10
+    },
+    "K2": {
+      "lower": 0,
+      "upper": 10
+    }
+  }
 }

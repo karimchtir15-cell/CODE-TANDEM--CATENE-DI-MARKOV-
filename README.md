@@ -5,7 +5,7 @@ I calcoli, i commenti e le stampe sono gli stessi dello script originale: l'outp
 `python main.py` e' identico riga per riga a quello di `python modello_generale_convergenza3.py`
 (a parte la prima riga, che dice da quale file sono stati letti i parametri).
 
-Ingresso e uscita sono entrambi JSON, nessun CSV:
+Ingresso e uscita sono JSON:
 
 ```
 input/parametri.json     ->  main.py  ->  output/risultati.json  (+ output/report.txt)
@@ -61,6 +61,35 @@ Alla fine di ogni esecuzione (salvo `--no-salva`) in `output/` trovi:
 
 - `risultati.json` — parametri, h, passi, probabilita' stazionarie per stato, indicatori, esiti dei controlli
 - `report.txt` — lo stesso testo stampato a video
+
+## Analisi di sensitivita' e grafici
+
+```bash
+python sensitivita.py                  # legge lo scenario base e i bound da input/parametri.json
+python sensitivita.py --input altro.json
+```
+
+Ogni parametro (lam, mu, K1, K2) viene fatto variare da solo tra un lower bound e un upper bound,
+tenendo gli altri tre al valore base (analisi one-at-a-time). I bound stanno nella sezione
+`"sensitivita"` di `input/parametri.json`:
+
+```json
+"sensitivita": {
+  "lam": {"lower": 4.0, "upper": 20.0, "punti": 9},
+  "mu":  {"lower": 6.0, "upper": 24.0, "punti": 9},
+  "K1":  {"lower": 0, "upper": 10},
+  "K2":  {"lower": 0, "upper": 10}
+}
+```
+
+Tutto finisce in `output/sensitivita/` (non tracciata da git):
+
+- `sensitivita.csv` — una riga per esecuzione: parametro variato, valore, parametri, indicatori
+- `scenario_base.json` — risultati completi dello scenario base
+- `fig1_macchine_base.png` — barre impilate M1 e M2: % del tempo in cui la macchina lavora / e' vuota / e' bloccata
+- `fig2_distribuzione_base.png` — probabilita' stazionarie di ogni stato
+- `fig3_sensitivita_<par>.png` — per ogni parametro, gli indicatori (throughput, P(rifiuto), P(M1 bloccata), WIP, Ws) al variare del parametro tra i bound
+- `fig4_macchine_bounds.png` — barre M1/M2 a lower bound, base e upper bound, per ogni parametro
 
 ## Usare le classi da un altro script
 
