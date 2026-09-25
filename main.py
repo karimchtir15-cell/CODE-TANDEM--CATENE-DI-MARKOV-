@@ -34,16 +34,10 @@ FILE_PARAMETRI = CARTELLA_INPUT / "parametri.json"
 
 
 def leggi_parametri(argomenti):
-    # 1) dal file JSON (input/parametri.json, o quello passato con --input);
-    # 2) se il file non esiste, i default scritti in ParametriIngresso;
-    # 3) in entrambi i casi i valori passati da riga di comando hanno la precedenza
-    if argomenti.input.exists():
-        parametri = ParametriIngresso.da_json(argomenti.input)
-        print("Parametri letti da:", argomenti.input)
-    else:
-        parametri = ParametriIngresso()
-        print("File", argomenti.input, "non trovato: uso i parametri di default",
-              "(copia input/parametri.example.json in input/parametri.json per cambiarli)")
+    # parametri dal file JSON (input/parametri.json, o quello passato con --input);
+    # i valori passati da riga di comando hanno la precedenza
+    parametri = ParametriIngresso.da_json(argomenti.input)
+    print("Parametri letti da:", argomenti.input)
     if argomenti.lam is not None: parametri.lam = argomenti.lam
     if argomenti.mu is not None:  parametri.mu = argomenti.mu
     if argomenti.K1 is not None:  parametri.K1 = argomenti.K1

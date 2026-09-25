@@ -17,8 +17,7 @@ input/parametri.json     ->  main.py  ->  output/risultati.json  (+ output/repor
 funziona/
 ├── modello_generale_convergenza3.py   copia dello script originale (non usato da main.py)
 ├── main.py                            punto di ingresso: usa le classi nell'ordine dello script
-├── input/parametri.json               parametri di ingresso letti da main.py (modificabile, non tracciato da git)
-├── input/parametri.example.json       esempio di file di ingresso (tracciato da git)
+├── input/parametri.json               parametri di ingresso letti da main.py
 ├── output/                            risultati salvati da main.py (risultati.json, report.txt)
 └── tandem/                            il package con le classi
     ├── input.py        ParametriIngresso             dati di ingresso (lam, mu, K1, K2), anche da JSON
@@ -38,7 +37,8 @@ fa solo convergere, `StampaConsole` stampa soltanto, `Risultati` contiene soltan
 ## Uso
 
 ```bash
-source ../.venv/bin/activate        # il venv del progetto (serve solo numpy)
+source .venv/bin/activate           # il venv del progetto
+pip install -r requirements.txt     # solo la prima volta (serve solo numpy)
 
 python main.py                                   # legge input/parametri.json
 python main.py --K1 1 --K2 1                     # sovrascrive singoli valori del JSON
@@ -56,9 +56,6 @@ Per cambiare i parametri modifica `input/parametri.json`:
   "K2": 0
 }
 ```
-
-Se `input/parametri.json` non esiste, `main.py` usa i valori di default (lam=10, mu=12, K1=0, K2=0)
-e lo dice nella prima riga.
 
 Alla fine di ogni esecuzione (salvo `--no-salva`) in `output/` trovi:
 
