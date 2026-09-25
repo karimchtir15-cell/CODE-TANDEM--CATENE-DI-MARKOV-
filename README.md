@@ -82,14 +82,13 @@ tenendo gli altri tre al valore base (analisi one-at-a-time). I bound stanno nel
 }
 ```
 
-Tutto finisce in `output/sensitivita/` (non tracciata da git):
+Ogni esecuzione salva in una cartella nuova `output/sensitivita/AAAA-MM-GG_HHMM/` (non tracciata da git),
+cosi' le esecuzioni precedenti restano:
 
-- `sensitivita.csv` — una riga per esecuzione: parametro variato, valore, parametri, indicatori
-- `scenario_base.json` — risultati completi dello scenario base
-- `fig1_macchine_base.png` — barre impilate M1 e M2: % del tempo in cui la macchina lavora / e' vuota / e' bloccata
-- `fig2_distribuzione_base.png` — probabilita' stazionarie di ogni stato
-- `fig3_sensitivita_<par>.png` — per ogni parametro, gli indicatori (throughput, P(rifiuto), P(M1 bloccata), WIP, Ws) al variare del parametro tra i bound
-- `fig4_macchine_bounds.png` — barre M1/M2 a lower bound, base e upper bound, per ogni parametro
+- `configurazione.json` — scenario base e bound usati
+- `sensitivita.csv` — una riga per esecuzione del modello: parametro variato, valore, parametri, indicatori
+- `sensitivita_<par>.png` — per ogni parametro, throughput, P(rifiuto), P(M1 bloccata), WIP e Ws al variare del parametro tra i bound
+- `macchine_ai_bound.png` — M1 e M2 a lower bound, scenario base e upper bound: % del tempo in cui la macchina lavora / e' vuota / e' bloccata
 
 ## Usare le classi da un altro script
 
