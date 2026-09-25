@@ -34,8 +34,8 @@ funziona/
 
 ```bash
 python3 -m venv .venv               # solo la prima volta
-source .venv/bin/activate
-pip install -r requirements.txt     # numpy e matplotlib
+source .venv/bin/activate           # su Windows: .venv\Scripts\activate
+pip install -r requirements.txt     # numpy e matplotlib (pip freeze di un .venv con Python 3.9.6)
 
 python main.py                                   # legge input/parametri.json
 python main.py --K1 1 --K2 1                     # sovrascrive singoli valori del JSON
@@ -82,7 +82,7 @@ tenendo gli altri tre al valore base (analisi one-at-a-time). I bound stanno nel
 }
 ```
 
-Ogni esecuzione salva in una cartella nuova `output/sensitivita/AAAA-MM-GG_HHMM/` (non tracciata da git),
+Ogni esecuzione salva in una cartella nuova `output/sensitivita/AAAA-MM-GG_HHMMSS/` (non tracciata da git),
 cosi' le esecuzioni precedenti restano:
 
 - `configurazione.json` — scenario base e bound usati

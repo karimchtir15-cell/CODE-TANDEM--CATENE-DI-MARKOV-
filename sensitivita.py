@@ -8,7 +8,7 @@ Uso:
 Ogni parametro (lam, mu, K1, K2) viene fatto variare da solo tra il lower e l'upper bound
 della sezione "sensitivita" del JSON, tenendo gli altri tre al valore base (one-at-a-time).
 
-Ogni esecuzione salva in una cartella nuova, output/sensitivita/AAAA-MM-GG_HHMM/,
+Ogni esecuzione salva in una cartella nuova, output/sensitivita/AAAA-MM-GG_HHMMSS/,
 cosi' i risultati precedenti non vengono sovrascritti:
     configurazione.json        scenario base e bound usati (per poter rifare l'esecuzione)
     sensitivita.csv            una riga per esecuzione del modello: parametro variato, valore, indicatori
@@ -170,7 +170,7 @@ def main():
     base = ParametriIngresso.da_json(argomenti.input)
     bound = json.loads(argomenti.input.read_text(encoding="utf-8"))["sensitivita"]
 
-    cartella = CARTELLA_OUTPUT / datetime.now().strftime("%Y-%m-%d_%H%M")
+    cartella = CARTELLA_OUTPUT / datetime.now().strftime("%Y-%m-%d_%H%M%S")
     cartella.mkdir(parents=True, exist_ok=True)
     (cartella / "configurazione.json").write_text(
         json.dumps({"scenario_base": base.come_dizionario(), "sensitivita": bound}, indent=2), encoding="utf-8")
