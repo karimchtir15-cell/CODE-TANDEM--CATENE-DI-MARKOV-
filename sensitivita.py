@@ -140,15 +140,32 @@ def grafico_sensitivita(righe, nome, percorso):
     plt.close(fig)
 
 
+def punto_centrale(punti, base, nome):
+    """Punto da mostrare come riferimento centrale tra lower e upper bound.
+
+    Di norma e' lo scenario base. Ma se il base di questo parametro coincide col
+    lower bound (es. K1=K2=0 nello scenario base), usarlo duplicherebbe la barra
+    del lower bound: si sceglie invece, tra i punti intermedi, quello dove la
+    probabilita' di blocco ha gia' coperto meta' della variazione totale tra i
+    due bound, cosi' il pannello mostra un cambiamento vero e non un doppione.
+    """
+    if base[nome] != punti[0]["valore"] or len(punti) <= 2:
+        return f"base\n{SIMBOLO[nome]}={base[nome]:g}", base
+    obiettivo = (punti[0]["p_bloccata"] + punti[-1]["p_bloccata"]) / 2
+    centro = min(punti[1:-1], key=lambda r: abs(r["p_bloccata"] - obiettivo))
+    return f"{SIMBOLO[nome]}={centro['valore']:g}\n(punto intermedio)", centro
+
+
 def grafico_macchine_ai_bound(righe, percorso):
-    """Un pannello per parametro: barre M1/M2 a lower bound, scenario base e upper bound."""
+    """Un pannello per parametro: barre M1/M2 a lower bound, un riferimento centrale e upper bound."""
     base = righe[0]
     fig, assi = plt.subplots(1, len(PARAMETRI), figsize=(15, 4), sharey=True)
     for asse, nome in zip(assi, PARAMETRI):
         punti = [r for r in righe if r["parametro"] == nome]
         s = SIMBOLO[nome]
+        etichetta_centro, centro = punto_centrale(punti, base, nome)
         scenari = [(f"lower bound\n{s}={punti[0]['valore']:g}", punti[0]),
-                   (f"base\n{s}={base[nome]:g}", base),
+                   (etichetta_centro, centro),
                    (f"upper bound\n{s}={punti[-1]['valore']:g}", punti[-1])]
         barre_macchine(asse, scenari, f"al variare di {s}")
     assi[0].set_ylabel("% del tempo")
