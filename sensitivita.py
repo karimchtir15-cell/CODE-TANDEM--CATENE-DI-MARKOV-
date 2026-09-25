@@ -132,10 +132,12 @@ def grafico_sensitivita(righe, nome, percorso):
         asse.tick_params(labelsize=8)
         if nome in ("K1", "K2"):
             asse.set_xticks(x)
-    assi[0].legend(fontsize=8, frameon=False)
     fig.suptitle(f"Sensitivita' a {SIMBOLO[nome]}: gli altri parametri restano al valore base "
                  f"(λ={base['lam']:g}, μ={base['mu']:g}, K1={base['K1']}, K2={base['K2']})", fontsize=10)
-    fig.tight_layout()
+    # legenda sotto il titolo, fuori dai pannelli: dentro un pannello sembrava un punto del grafico
+    fig.legend(*assi[0].get_legend_handles_labels(), loc="upper center", bbox_to_anchor=(0.5, 0.93),
+               fontsize=8, frameon=False)
+    fig.tight_layout(rect=(0, 0, 1, 0.88))
     fig.savefig(percorso, dpi=150, bbox_inches="tight")
     plt.close(fig)
 
