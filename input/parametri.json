@@ -22,5 +22,26 @@
       "lower": 0,
       "upper": 10
     }
+  },
+  "costi": {
+    "ricavo_pezzo": 10.0,
+    "costo_posto_ora": 1.0,
+    "costo_attesa_ora": 0.5,
+    "K_max": 10,
+    "rho": [
+      0.25,
+      0.5,
+      0.75,
+      1.0,
+      1.25,
+      1.5
+    ],
+    "fattori": [
+      0.25,
+      0.5,
+      1,
+      2,
+      4
+    ]
   }
 }

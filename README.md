@@ -7,6 +7,7 @@ distribuzione di probabilita' fino a quella stazionaria, da cui si calcolano gli
 ```
 input/parametri.json  ->  main.py          ->  output/risultati_<parametri>.json  (+ report_<parametri>.txt)
 input/parametri.json  ->  sensitivita.py   ->  output/sensitivita/<data_ora>/     (tabella + grafici)
+input/parametri.json  ->  costi.py         ->  output/costi/<data_ora>/           (tabelle + grafici)
 ```
 
 ## Struttura
@@ -15,7 +16,8 @@ input/parametri.json  ->  sensitivita.py   ->  output/sensitivita/<data_ora>/   
 funziona/
 ├── main.py                 un'esecuzione del modello con i parametri di input/parametri.json
 ├── sensitivita.py          analisi di sensitivita' one-at-a-time e grafici
-├── input/parametri.json    scenario base (lam, mu, K1, K2) e bound della sensitivita'
+├── costi.py                analisi economica: quanti posti di buffer conviene mettere, e come cambia con rho e con i costi
+├── input/parametri.json    scenario base (lam, mu, K1, K2), bound della sensitivita', costi
 ├── output/                 risultati salvati (non tracciata da git: si ricrea lanciando gli script)
 ├── requirements.txt        pacchetti del .venv (pip freeze)
 └── tandem/                 il package con le classi
@@ -89,6 +91,52 @@ cosi' le esecuzioni precedenti restano:
 - `sensitivita.csv` — una riga per esecuzione del modello: parametro variato, valore, parametri, indicatori
 - `sensitivita_<par>.png` — per ogni parametro, throughput, P(rifiuto), P(M1 bloccata), WIP e Ws al variare del parametro tra i bound
 - `macchine_ai_bound.png` — M1 e M2 a lower bound, scenario base e upper bound: % del tempo in cui la macchina lavora / e' vuota / e' bloccata
+
+## Analisi economica dei buffer
+
+```bash
+python costi.py                        # legge scenario base e sezione "costi" da input/parametri.json
+python costi.py --input altro.json
+```
+
+Per ogni coppia (K1, K2) da 0 a `K_max` il modello da' il throughput e i pezzi medi in attesa nei due
+buffer, e il profitto orario e'
+
+```
+profitto = ricavo_pezzo * throughput
+         - costo_posto_ora * (K1 + K2)
+         - costo_attesa_ora * (L_buffer1 + L_buffer2)
+```
+
+La coppia migliore e' quella col profitto piu' alto. La griglia viene rifatta per ogni valore di `rho`
+della lista (lam = rho * mu, con mu al valore base) per vedere con quali carichi convengono buffer grandi
+o piccoli; la sensitivita' ai costi moltiplica un costo alla volta per i `fattori`, sulla griglia dello
+scenario base. Tutto sta nella sezione `"costi"` di `input/parametri.json`; i valori dei costi sono
+di esempio, da sostituire con quelli reali:
+
+```json
+"costi": {
+  "ricavo_pezzo": 10.0,
+  "costo_posto_ora": 1.0,
+  "costo_attesa_ora": 0.5,
+  "K_max": 10,
+  "rho": [0.25, 0.5, 0.75, 1.0, 1.25, 1.5],
+  "fattori": [0.25, 0.5, 1, 2, 4]
+}
+```
+
+Ogni esecuzione salva in una cartella nuova `output/costi/AAAA-MM-GG_HHMMSS/` (non tracciata da git):
+
+- `configurazione.json` — scenario base, costi, rho e fattori usati
+- `griglia.csv` — una riga per (rho, K1, K2): indicatori, ricavo, costi, profitto
+- `ottimo_vs_rho.csv` — per ogni rho la coppia migliore, il suo profitto e quello senza buffer
+- `ottimo_vs_costi.csv` — per ogni costo e fattore la coppia migliore
+- `profitto_griglia.png` — mappa del profitto su (K1, K2), un pannello per rho, con la coppia migliore cerchiata
+- `ottimo_vs_rho.png` — K1*, K2* e profitto orario (con i buffer migliori e senza buffer) al variare di rho
+- `ottimo_vs_costi.png` — K1*, K2* al variare di ciascun costo
+
+Se una coppia migliore tocca `K_max`, lo script lo segnala: alza `K_max` nel JSON (il tempo cresce con
+il quadrato di K_max: con 10 sono 121 esecuzioni per ogni rho, meno di un minuto in tutto).
 
 ## Usare le classi da un altro script
 

@@ -71,6 +71,8 @@ class StampaConsole:
               "pezzi/ora che si presentano ne vengono rifiutati", round(lam - ind.lam_eff, 4))
         print("Throughput          =", round(ind.throughput, 4), "pezzi/ora  (= lambda effettivo, cio' che entra e' cio' che esce)")
         print("Ls (= WIP)          =", round(ind.Ls, 4), "pezzi     (numero medio di pezzi nel sistema)")
+        print("  di cui in attesa  =", round(ind.L_buffer1, 4), "nel buffer davanti a M1,", round(ind.L_buffer2, 4),
+              "nel buffer tra M1 e M2 (il resto e' nelle macchine)")
         print("Ws                  =", round(ind.Ws, 4), "ore =", round(ind.Ws * 60, 2),
               "minuti   (tempo medio nel sistema, Ws = Ls / lambda_eff)")
 

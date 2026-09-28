@@ -17,6 +17,8 @@ class Indicatori:
     p_M1_occupata: float    # M1 sta lavorando
     p_M2_occupata: float    # M2 sta lavorando
     Ls: float               # numero medio di pezzi nel sistema (WIP)
+    L_buffer1: float        # pezzi medi in attesa nel buffer davanti a M1 (esclusa la macchina)
+    L_buffer2: float        # pezzi medi in attesa nel buffer tra M1 e M2 (esclusa la macchina)
     lam_eff: float          # pezzi/ora che entrano davvero
     throughput_M1: float    # pezzi/ora lavorati da M1 (usato solo nel controllo del flusso)
     throughput: float       # pezzi/ora che escono da M2 = throughput del sistema
@@ -40,6 +42,7 @@ class CalcolatoreIndicatori:
         K1 = self.parametri.K1
 
         p_bloccata = p_vuoto = p_perso = p_M1_occupata = p_M2_occupata = Ls = 0.0
+        L_buffer1 = L_buffer2 = 0.0
 
         for r in range(self.spazio.numero_stati):
             tipo, i, j = self.spazio[r]
@@ -49,6 +52,8 @@ class CalcolatoreIndicatori:
             if tipo == "N" and i >= 1: p_M1_occupata = p_M1_occupata + p[r]      # M1 sta lavorando
             if j >= 1:                 p_M2_occupata = p_M2_occupata + p[r]      # M2 sta lavorando
             Ls = Ls + (i + j) * p[r]                                             # pezzi presenti nello stato, pesati con p
+            L_buffer1 = L_buffer1 + max(i - 1, 0) * p[r]                         # sul lato M1 un pezzo e' in macchina, gli altri aspettano
+            L_buffer2 = L_buffer2 + max(j - 1, 0) * p[r]                         # idem sul lato M2
 
         lam_eff = lam * (1 - p_perso)                # entra davvero solo la frazione di arrivi che trova posto
         throughput_M1 = mu * p_M1_occupata           # pezzi/ora lavorati da M1 (usato solo nel controllo del flusso)
@@ -62,6 +67,8 @@ class CalcolatoreIndicatori:
             p_M1_occupata=p_M1_occupata,
             p_M2_occupata=p_M2_occupata,
             Ls=Ls,
+            L_buffer1=L_buffer1,
+            L_buffer2=L_buffer2,
             lam_eff=lam_eff,
             throughput_M1=throughput_M1,
             throughput=throughput,
