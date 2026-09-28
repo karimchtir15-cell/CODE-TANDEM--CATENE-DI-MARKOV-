@@ -99,24 +99,28 @@ python costi.py                        # legge scenario base e sezione "costi" d
 python costi.py --input altro.json
 ```
 
+Come in letteratura si guardano solo i costi e si prende la configurazione che li minimizza.
 Per ogni coppia (K1, K2) da 0 a `K_max` il modello da' il throughput e i pezzi medi in attesa nei due
-buffer, e il profitto orario e'
+buffer, e il costo orario e'
 
 ```
-profitto = ricavo_pezzo * throughput
-         - costo_posto_ora * (K1 + K2)
-         - costo_attesa_ora * (L_buffer1 + L_buffer2)
+costo = costo_pezzo_perso * (lam - throughput)          pezzi/ora rifiutati perche' non c'e' posto
+      + costo_posto_ora   * (K1 + K2)                   posti di buffer installati
+      + costo_attesa_ora  * (L_buffer1 + L_buffer2)     pezzi fermi ad aspettare
 ```
 
-La coppia migliore e' quella col profitto piu' alto. La griglia viene rifatta per ogni valore di `rho`
-della lista (lam = rho * mu, con mu al valore base) per vedere con quali carichi convengono buffer grandi
-o piccoli; la sensitivita' ai costi moltiplica un costo alla volta per i `fattori`, sulla griglia dello
-scenario base. Tutto sta nella sezione `"costi"` di `input/parametri.json`; i valori dei costi sono
-di esempio, da sostituire con quelli reali:
+La coppia migliore e' quella col costo piu' basso. E' la stessa cosa che massimizzare il profitto a un
+dato prezzo di vendita: il ricavo `prezzo * throughput` vale `prezzo * lam - prezzo * (lam - throughput)`
+e `prezzo * lam` non dipende dai buffer, quindi il prezzo fa da costo del pezzo perso.
+
+La griglia viene rifatta per ogni valore di `rho` della lista (lam = rho * mu, con mu al valore base) per
+vedere con quali carichi convengono buffer grandi o piccoli; la sensitivita' ai costi moltiplica un costo
+alla volta per i `fattori`, sulla griglia dello scenario base. Tutto sta nella sezione `"costi"` di
+`input/parametri.json`; i valori dei costi sono di esempio, da sostituire con quelli reali:
 
 ```json
 "costi": {
-  "ricavo_pezzo": 10.0,
+  "costo_pezzo_perso": 10.0,
   "costo_posto_ora": 1.0,
   "costo_attesa_ora": 0.5,
   "K_max": 10,
@@ -128,11 +132,11 @@ di esempio, da sostituire con quelli reali:
 Ogni esecuzione salva in una cartella nuova `output/costi/AAAA-MM-GG_HHMMSS/` (non tracciata da git):
 
 - `configurazione.json` — scenario base, costi, rho e fattori usati
-- `griglia.csv` — una riga per (rho, K1, K2): indicatori, ricavo, costi, profitto
-- `ottimo_vs_rho.csv` — per ogni rho la coppia migliore, il suo profitto e quello senza buffer
+- `griglia.csv` — una riga per (rho, K1, K2): indicatori, le tre voci di costo, costo totale
+- `ottimo_vs_rho.csv` — per ogni rho la coppia migliore, il suo costo e quello senza buffer
 - `ottimo_vs_costi.csv` — per ogni costo e fattore la coppia migliore
-- `profitto_griglia.png` — mappa del profitto su (K1, K2), un pannello per rho, con la coppia migliore cerchiata
-- `ottimo_vs_rho.png` — K1*, K2* e profitto orario (con i buffer migliori e senza buffer) al variare di rho
+- `costo_griglia.png` — mappa del costo su (K1, K2), un pannello per rho, con la coppia migliore cerchiata
+- `ottimo_vs_rho.png` — K1*, K2* e costo orario (con i buffer migliori e senza buffer) al variare di rho
 - `ottimo_vs_costi.png` — K1*, K2* al variare di ciascun costo
 
 Se una coppia migliore tocca `K_max`, lo script lo segnala: alza `K_max` nel JSON (il tempo cresce con
