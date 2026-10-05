@@ -49,6 +49,7 @@ import numpy as np
 
 from tandem import ParametriIngresso
 from main import esegui
+from tandem.diretto import calcola_diretto
 
 CARTELLA_PROGETTO = Path(__file__).resolve().parent
 FILE_PARAMETRI = CARTELLA_PROGETTO / "input" / "parametri.json"
@@ -66,16 +67,22 @@ MAPPA_BLU = LinearSegmentedColormap.from_list("blu", ["#cde2fb", "#86b6ef", "#39
 
 # ---------------------------------------------------------------- calcolo
 
-def calcola_griglia(base, lam, K_max):
-    """Esegue il modello per ogni (K1, K2) da 0 a K_max, con lam dato e mu al valore base."""
+def calcola_griglia(base, lam, K_max, K_convergenza=None):
+    """Esegue il modello per ogni (K1, K2) da 0 a K_max, con lam dato e mu al valore base. Le coppie con
+    K1 o K2 oltre K_convergenza (se dato) sono risolte con la soluzione diretta di pi*Q = 0."""
     righe = []
     for K1 in range(K_max + 1):
         for K2 in range(K_max + 1):
-            with redirect_stdout(io.StringIO()):
-                modello, risultati = esegui(ParametriIngresso(lam=lam, mu=base.mu, K1=K1, K2=K2))
-            i = risultati.indicatori
+            par = ParametriIngresso(lam=lam, mu=base.mu, K1=K1, K2=K2)
+            if K_convergenza is not None and max(K1, K2) > K_convergenza:
+                i = calcola_diretto(par); stati = i["stati"]
+                i = type("I", (), i)                       # stessi nomi di campo degli indicatori
+            else:
+                with redirect_stdout(io.StringIO()):
+                    modello, risultati = esegui(par)
+                i = risultati.indicatori; stati = modello.numero_stati
             righe.append({"rho": lam / base.mu, "lam": lam, "mu": base.mu, "K1": K1, "K2": K2,
-                          "stati": modello.numero_stati, "throughput": i.throughput,
+                          "stati": stati, "throughput": i.throughput,
                           "pezzi_persi_ora": lam - i.throughput, "p_perso": i.p_perso,
                           "p_bloccata": i.p_bloccata, "Ls": i.Ls,
                           "L_buffer1": i.L_buffer1, "L_buffer2": i.L_buffer2})
@@ -254,8 +261,11 @@ def main():
                             "costo_senza_buffer": s["costo_totale"], "throughput_senza_buffer": s["throughput"]})
     scrivi_csv(cartella / "ottimo_vs_rho.csv", tabella_rho)
 
-    # 3. sensitivita' ai costi, un costo alla volta, sulla griglia dello scenario base
-    griglia_base = next(righe for rho, righe in griglie if rho == base.rho)
+    # 3. sensitivita' ai costi, un costo alla volta, sulla griglia dello scenario base estesa fino a
+    #    K_max_sensitivita (oltre K_max con la soluzione diretta): con i costi dei posti molto bassi l'ottimo ha molti posti
+    K_sens = int(dati.get("K_max_sensitivita", K_max))
+    griglia_base = (calcola_griglia(base, base.lam, K_sens, K_convergenza=K_max) if K_sens > K_max
+                    else next(righe for rho, righe in griglie if rho == base.rho))
     tabella_costi = []
     for chiave, _, _ in COSTI:
         for fattore in fattori:
@@ -264,8 +274,8 @@ def main():
             o = ottimo(con_costi(griglia_base, c))
             tabella_costi.append({"costo": chiave, "fattore": fattore, "valore": c[chiave],
                                   "K1_ottimo": o["K1"], "K2_ottimo": o["K2"], "costo_ottimo": o["costo_totale"]})
-            if K_max in (o["K1"], o["K2"]):
-                print(f"{chiave} x{fattore:g}: l'ottimo (K1 = {o['K1']}, K2 = {o['K2']}) tocca K_max")
+            if K_sens in (o["K1"], o["K2"]):
+                print(f"{chiave} x{fattore:g}: l'ottimo (K1 = {o['K1']}, K2 = {o['K2']}) tocca K_max_sensitivita")
     scrivi_csv(cartella / "ottimo_vs_costi.csv", tabella_costi)
 
     grafico_griglia(griglie, K_max, cartella / "costo_griglia.png")

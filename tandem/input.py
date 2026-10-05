@@ -23,12 +23,15 @@ class ParametriIngresso:
             raise ValueError("lam e mu devono essere maggiori di zero")
         if self.K1 < 0 or self.K2 < 0:
             raise ValueError("K1 e K2 devono essere maggiori o uguali a zero")
+        if self.lam >= self.mu:
+            # ipotesi della tesi (par. 3.1): carico rho = lam/mu strettamente minore di 1
+            raise ValueError(f"rho = lam/mu = {self.lam / self.mu:.3g}: le analisi richiedono rho < 1, cioe' lam < mu")
         self.K1 = int(self.K1)
         self.K2 = int(self.K2)
 
     @property
     def rho(self):
-        # fattore di utilizzo lam/mu, usato solo nelle stampe
+        # carico rho = lam/mu, sempre minore di 1 (controllato sopra)
         return self.lam / self.mu
 
     @classmethod

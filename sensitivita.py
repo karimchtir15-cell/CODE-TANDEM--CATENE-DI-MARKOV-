@@ -14,6 +14,8 @@ cosi' i risultati precedenti non vengono sovrascritti:
     sensitivita.csv            una riga per esecuzione del modello: parametro variato, valore, indicatori
     sensitivita_<par>.png      gli indicatori al variare di un parametro tra i bound
     macchine_ai_bound.png      M1 e M2 a lower bound / base / upper bound: % del tempo lavora / vuota / bloccata
+    tempo_macchine_K1.png      M1 e M2 per i valori di K1 scelti: colonne impilate lavora / vuota / bloccata (tesi, Figura 5.4)
+    tempo_macchine_K2.png      lo stesso per ogni valore di K2                                       (tesi, Figura 5.6)
 """
 import argparse
 import csv
@@ -69,6 +71,8 @@ def valori_da_provare(nome, bound):
     b = bound[nome]
     if nome in ("K1", "K2"):
         return list(range(int(b["lower"]), int(b["upper"]) + 1))     # i buffer sono interi
+    if b.get("scala") == "log":                                          # per mu fino a valori molto grandi
+        return [float(v) for v in np.unique(np.round(np.geomspace(b["lower"], b["upper"], int(b["punti"]))))]
     return list(np.linspace(b["lower"], b["upper"], int(b["punti"])))
 
 
@@ -113,7 +117,7 @@ def barre_macchine(asse, scenari, titolo):
     asse.spines[["top", "right"]].set_visible(False)
 
 
-def grafico_sensitivita(righe, nome, percorso):
+def grafico_sensitivita(righe, nome, percorso, log=False):
     """Un pannello per indicatore: il suo valore al variare di `nome` tra lower e upper bound."""
     base = righe[0]
     punti = [r for r in righe if r["parametro"] == nome]
@@ -131,7 +135,9 @@ def grafico_sensitivita(righe, nome, percorso):
         asse.spines[["top", "right"]].set_visible(False)
         asse.tick_params(labelsize=8)
         if nome in ("K1", "K2"):
-            asse.set_xticks(x)
+            asse.set_xticks(x[::max(1, len(x) // 10)])           # con capacita' fino a 40 un'etichetta ogni pochi valori
+        if log:
+            asse.set_xscale("log")
     fig.suptitle(f"Sensitivita' a {SIMBOLO[nome]}: gli altri parametri restano al valore base "
                  f"(λ={base['lam']:g}, μ={base['mu']:g}, K1={base['K1']}, K2={base['K2']})", fontsize=10)
     # legenda sotto il titolo, fuori dai pannelli: dentro un pannello sembrava un punto del grafico
@@ -179,6 +185,47 @@ def grafico_macchine_ai_bound(righe, percorso):
     plt.close(fig)
 
 
+def grafico_tempo_macchine(righe, nome, percorso, valori=None):
+    """Sensitivita' del tempo delle macchine: per ogni valore di `nome` una colonna per M1 e una per M2,
+    divise in % del tempo in cui la macchina lavora / e' vuota / e' bloccata (colonne impilate in verticale).
+    Con `valori` si disegnano solo quei valori (nella tesi i piccoli, dove gli indici cambiano, e alcuni grandi,
+    dove si sono assestati: Figure 5.4 e 5.6)."""
+    base = righe[0]
+    punti = [r for r in righe if r["parametro"] == nome and (valori is None or r["valore"] in valori)]
+    x = np.arange(len(punti))
+    fig, assi = plt.subplots(1, 2, figsize=(12, 4.5), sharey=True)
+    for asse, m in zip(assi, ("M1", "M2")):
+        fondo = np.zeros(len(punti))
+        if m == "M1":
+            quote = [("lavora", [r["p_M1_occupata"] for r in punti]),
+                     ("vuota", [1 - r["p_M1_occupata"] - r["p_bloccata"] for r in punti]),
+                     ("bloccata", [r["p_bloccata"] for r in punti])]
+        else:
+            quote = [("lavora", [r["p_M2_occupata"] for r in punti]), ("vuota", [1 - r["p_M2_occupata"] for r in punti])]
+        for parte, v in quote:
+            v = 100 * np.array(v)
+            asse.bar(x, v, bottom=fondo, color=COLORE[parte], width=0.72, edgecolor="white", linewidth=1.2, label=parte)
+            for xi, (f0, vi) in enumerate(zip(fondo, v)):
+                if vi >= 8:
+                    asse.text(xi, f0 + vi / 2, f"{vi:.0f}", ha="center", va="center", fontsize=7,
+                              color="#0b0b0b" if parte == "vuota" else "white")
+            fondo = fondo + v
+        asse.set_xticks(x)
+        asse.set_xticklabels([f"{r['valore']:g}" for r in punti])
+        asse.set_xlabel(f"{SIMBOLO[nome]}  ({DESCRIZIONE[nome]})", fontsize=8)
+        asse.set_ylim(0, 100)
+        asse.set_title(m)
+        asse.spines[["top", "right"]].set_visible(False)
+    assi[0].set_ylabel("% del tempo")
+    fig.legend(*assi[0].get_legend_handles_labels(), loc="upper center", bbox_to_anchor=(0.5, 0.93), ncol=3,
+               fontsize=8, frameon=False)
+    fig.suptitle(f"Tempo delle macchine al variare di {SIMBOLO[nome]} (gli altri parametri al valore base: "
+                 f"λ={base['lam']:g}, μ={base['mu']:g}, K1={base['K1']}, K2={base['K2']})", fontsize=10)
+    fig.tight_layout(rect=(0, 0, 1, 0.88))
+    fig.savefig(percorso, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+
+
 # ---------------------------------------------------------------- main
 
 def main():
@@ -201,8 +248,11 @@ def main():
         scrittore.writerows(righe)
 
     for nome in PARAMETRI:
-        grafico_sensitivita(righe, nome, cartella / f"sensitivita_{nome}.png")
+        grafico_sensitivita(righe, nome, cartella / f"sensitivita_{nome}.png", log=bound[nome].get("scala") == "log")
     grafico_macchine_ai_bound(righe, cartella / "macchine_ai_bound.png")
+    for nome in ("K1", "K2"):
+        grafico_tempo_macchine(righe, nome, cartella / f"tempo_macchine_{nome}.png",
+                               bound.get("tempo_macchine_valori", {}).get(nome))
     print(len(righe), "esecuzioni del modello. Risultati e grafici in:", cartella)
 
 
